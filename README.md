@@ -1,23 +1,35 @@
-# Chat Delay (Chatterino plugin)
+# Chat Delay for Chatterino
 
-Holds chat messages back by a fixed delay per channel, so chat lines up with a
-delayed stream (sports broadcasts, a delayed restream, etc.).
+Watching a delayed stream, like a sports broadcast or a restream? Chat reacts to
+the goal before you see it. **Chat Delay** holds Twitch chat back by however many
+seconds you set, per channel, so chat lines up with your stream.
 
-**Requires a Chatterino nightly build.** It uses `Channel:on_message_appended`,
-which isn't in 2.5.5. See [FEASIBILITY.md](FEASIBILITY.md) for how it works.
+<!-- TODO: screenshot or GIF of chat going quiet and catching up
+![Chat Delay in action](docs/demo.gif)
+-->
+
+> [!IMPORTANT]
+> **Requires a Chatterino nightly build.** The plugin relies on plugin APIs
+> (`Channel:on_message_appended`, `Message:clone`, …) that aren't in a stable
+> release yet. Stable 2.5.6 doesn't have them. On older versions the plugin
+> loads, but `/delay` only tells you to update. The nightly can run
+> [side by side with your normal Chatterino](TESTING-WINDOWS.md#1-get-a-portable-nightly).
 
 ## Install
 
-1. Install a [nightly build](https://github.com/Chatterino/chatterino2/releases/tag/nightly-build).
-2. Link the plugin into Chatterino's plugin folder:
-   ```sh
-   ln -s "$PWD/plugin" ~/.local/share/chatterino/Plugins/chat-delay
-   ```
-   (Windows: `%APPDATA%\Chatterino2\Plugins\chat-delay`, macOS:
-   `~/Library/Application Support/chatterino/Plugins/chat-delay`.)
-3. Settings → Plugins: enable plugin support, then enable **Chat Delay**.
-   Step-by-step for Windows, including a test checklist: [TESTING-WINDOWS.md](TESTING-WINDOWS.md).
-   Chatterino creates `plugin/data/` for the plugin's settings. Git ignores it.
+1. Get a [Chatterino nightly](https://github.com/Chatterino/chatterino2/releases/tag/nightly-build).
+2. Download `chat-delay-vX.Y.Z.zip` from the
+   [latest release](https://github.com/kastro5/chatterino-chat-delay/releases)
+   and extract it into Chatterino's `Plugins` folder. You should end up with
+   `Plugins\chat-delay\init.lua`.
+   - Windows: `%APPDATA%\Chatterino2\Plugins\`, or `<chatterino folder>\Plugins\` in portable mode
+   - Linux: `~/.local/share/chatterino/Plugins/`
+   - macOS: `~/Library/Application Support/chatterino/Plugins/`
+3. In Chatterino, open **Settings → Plugins**, tick **Enable plugins**, then press
+   **Enable** on **Chat Delay**.
+
+Check it works: type `/delay selftest` in any channel. It should report
+`20 passed, 0 failed`.
 
 ## Usage
 
@@ -39,11 +51,11 @@ Set a rough delay first, then nudge it with `+`/`-`. A change also re-times
 messages that are already being held.
 
 Your own messages and client-only notices (command output, connection status)
-are always shown right away.
+are always shown right away. Other channels aren't affected.
 
 ## Known limitations
 
-These come from the plugin API. A Chatterino fork would be needed to fix them.
+These come from the plugin API. Fixing them would need changes in Chatterino itself.
 
 - **Sounds, notifications and mentions aren't delayed.** Highlight sounds,
   desktop notifications, the `/mentions` split, tab highlighting and logs all
@@ -55,17 +67,37 @@ These come from the plugin API. A Chatterino fork would be needed to fix them.
   from view.
 - The "user timed out N times" counter may not stack for timeouts during the delay.
 
+Found a bug? [Open an issue](https://github.com/kastro5/chatterino-chat-delay/issues).
+
+## How it works
+
+Each incoming message is swapped for an invisible, zero-height copy before
+Chatterino draws it. Once the delay has passed, the real message is swapped
+back in at the same spot. [FEASIBILITY.md](FEASIBILITY.md) covers the details
+and why a plugin can do this at all.
+
 ## Development
 
-- `plugin/init.lua`: commands, the 100ms release tick, hooking open channels, and the context menu
+- `plugin/init.lua`: version check, commands, the 100ms release tick, hooking open channels, and the context menu
 - `plugin/delayer.lua`: hold/release (the placeholder swap)
 - `plugin/config.lua`: per-channel delays, persistence, and duration parsing
 - `plugin/selftest.lua`: `/delay selftest`
 - `types/`: LuaLS definitions copied from chatterino2 `docs/lua-meta`. Note
-  that `c2.ChannelType` keys are lowercase at runtime (`twitch`), unlike these
-  definitions.
+  that `c2.ChannelType` keys are currently lowercase at runtime (`twitch`),
+  unlike these definitions
+  ([chatterino2#7127](https://github.com/Chatterino/chatterino2/issues/7127)).
+
+[TESTING-WINDOWS.md](TESTING-WINDOWS.md) sets up a portable nightly with the
+plugin linked from a git checkout, and has a manual test checklist.
+
+**Release zip:** `python scripts/package.py` writes `dist/chat-delay-v<version>.zip`.
+The version comes from `plugin/info.json`.
 
 **Headless testing:** if `plugin/data/autotest` contains a channel name, the
 self-test runs there once the channel has loaded. The results go to
 `plugin/data/autotest-result.txt` and to the log (`SELFTEST ...` lines, with
 `QT_LOGGING_RULES=chatterino.lua=true`).
+
+## License
+
+[MIT](LICENSE)

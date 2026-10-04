@@ -1,6 +1,50 @@
 -- Chat Delay: holds chat messages back per channel so chat lines up with a
 -- delayed stream. See README.md for usage and known limitations.
 
+-- Bail out with a clear message on Chatterino versions that lack the APIs we
+-- need (everything up to and including 2.5.6 at the time of writing).
+local NIGHTLY_URL = "https://github.com/Chatterino/chatterino2/releases/tag/nightly-build"
+
+---@param get fun(): any
+---@return boolean
+local function has(get)
+    local ok, value = pcall(get)
+    return ok and value ~= nil
+end
+
+local missing = {}
+for name, get in pairs({
+    ["c2.DateTime"] = function()
+        return c2.DateTime
+    end,
+    ["c2.windows"] = function()
+        return c2.windows
+    end,
+    ["Channel:on_message_appended"] = function()
+        return c2.Channel.on_message_appended
+    end,
+    ["Message:clone"] = function()
+        return c2.Message.clone
+    end,
+}) do
+    if not has(get) then
+        table.insert(missing, name)
+    end
+end
+
+if #missing > 0 then
+    table.sort(missing)
+    local text = "Chat Delay needs a Chatterino nightly build (this version lacks "
+        .. table.concat(missing, ", ")
+        .. "). Get it at "
+        .. NIGHTLY_URL
+    c2.log(c2.LogLevel.Warning, text)
+    c2.register_command("/delay", function(ctx)
+        ctx.channel:add_system_message("[chat-delay] " .. text)
+    end)
+    return
+end
+
 local config = require("config")
 local delayer = require("delayer")
 local selftest = require("selftest")

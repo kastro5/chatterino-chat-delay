@@ -33,7 +33,7 @@ Clone the repo anywhere, e.g. `C:\Code`:
 
 ```powershell
 cd C:\Code
-git clone https://github.com/kastro5/chat-delay.git
+git clone https://github.com/kastro5/chatterino-chat-delay.git chat-delay
 ```
 
 Link the repo's `plugin` folder into the nightly's `Plugins` folder. A

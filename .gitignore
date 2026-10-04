@@ -1,2 +1,3 @@
-# Runtime data Chatterino creates inside the plugin folder
+# Runtime data Chatterino creates inside the plugin folder, and release zips
 plugin/data/
+dist/
