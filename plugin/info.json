@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Chatterino/chatterino2/master/docs/plugin-info.schema.json",
+  "name": "Chat Delay",
+  "description": "Delays chat messages per channel so chat lines up with a delayed stream. Use /delay <seconds>.",
+  "authors": ["felipe"],
+  "homepage": "https://github.com/kastro5/chat-delay",
+  "tags": ["delay", "sync", "sports"],
+  "version": "0.1.0",
+  "license": "MIT",
+  "permissions": [{ "type": "FilesystemRead" }, { "type": "FilesystemWrite" }]
+}
